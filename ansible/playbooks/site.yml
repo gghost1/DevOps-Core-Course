@@ -1,0 +1,7 @@
+---
+# Single entrypoint playbook.
+- name: Provision servers
+  import_playbook: provision.yml
+
+- name: Deploy web application
+  import_playbook: deploy.yml
