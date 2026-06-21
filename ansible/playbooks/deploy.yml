@@ -1,0 +1,13 @@
+---
+- name: Deploy application
+  hosts: webservers
+  become: true
+
+  # Vaulted vars file (encrypted): CI must provide a vault password file.
+  vars_files:
+    - ../group_vars/all.yml
+
+  roles:
+    - role: web_app
+      tags:
+        - web_app
