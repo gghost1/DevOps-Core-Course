@@ -1,0 +1,51 @@
+---
+# Common role: base system packages + basic user management.
+- name: Common | Packages (apt update + install)
+  become: true
+  tags:
+    - packages
+  block:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install common packages
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+
+  rescue:
+    # Fallback for transient apt metadata issues.
+    - name: Fix apt cache on failure # noqa: command-instead-of-module
+      ansible.builtin.command: apt-get update --fix-missing
+      changed_when: false
+
+    - name: Retry apt cache update after fix
+      ansible.builtin.apt:
+        update_cache: true
+
+  always:
+    - name: Log common packages block completion
+      ansible.builtin.copy:
+        dest: /tmp/ansible-common-packages.done
+        content: "common packages block finished on {{ inventory_hostname }}\n"
+        mode: "0644"
+
+- name: Common | Users management
+  become: true
+  tags:
+    - users
+  block:
+    - name: Create application user
+      ansible.builtin.user:
+        name: "{{ common_app_user }}"
+        shell: /bin/bash
+        create_home: true
+
+  always:
+    - name: Log common users block completion
+      ansible.builtin.copy:
+        dest: /tmp/ansible-common-users.done
+        content: "common users block finished on {{ inventory_hostname }}\n"
+        mode: "0644"
